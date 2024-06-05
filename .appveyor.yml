@@ -1,5 +1,5 @@
 # Versión de AppVeyor
-version: 1.6.{build}
+version: 1.7.{build}
 
 # Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
@@ -10,7 +10,7 @@ environment:
 
 # Instalación de PHP y Composer
 install:
-  # Descargar PHP
+  # Descargar y configurar PHP
   - ps: |
       $ErrorActionPreference = 'Stop'
       $phpPath = "C:\\php"
@@ -18,12 +18,14 @@ install:
         New-Item -ItemType Directory -Path $phpPath
       }
       $webClient = New-Object System.Net.WebClient
-      $webClient.DownloadFile($env:PHP_URL, "$phpPath\\php.zip")
-      Expand-Archive -Path "$phpPath\\php.zip" -DestinationPath $phpPath
-      $env:Path += ";$phpPath\\php-8.2.12-Win32-vs16-x64"
-      Write-Host "PHP installed to $phpPath\\php-8.2.12-Win32-vs16-x64"
+      $phpZipPath = "$phpPath\\php.zip"
+      $webClient.DownloadFile($env:PHP_URL, $phpZipPath)
+      Expand-Archive -Path $phpZipPath -DestinationPath $phpPath
+      $phpFolder = Get-ChildItem -Path $phpPath | Where-Object { $_.PsIsContainer } | Select-Object -First 1
+      $env:Path += ";$phpPath\\$phpFolder"
+      Write-Host "PHP installed to $phpPath\\$phpFolder"
   
-  # Descargar Composer
+  # Descargar y configurar Composer
   - ps: |
       $composerUrl = 'https://getcomposer.org/installer'
       $composerSetup = "$phpPath\\composer-setup.php"
@@ -34,13 +36,12 @@ install:
 
 # Instalar dependencias de PHP usando Composer
 before_build:
-  - cmd: composer install
+  - ps: |
+      & "$phpPath\\composer" install
 
-# Construcción y verificación de sintaxis
+# Verificación de sintaxis PHP
 build_script:
-  - echo Build started
-  - php -l src # Verifica que los archivos PHP no tienen errores de sintaxis
+  - ps: |
+      Get-ChildItem -Recurse -Include *.php | ForEach-Object { php -l $_.FullName }
 
-artifacts:
-  - path: php.log
-    name: PHP Log
+# Sin despliegue ni notificaciones
