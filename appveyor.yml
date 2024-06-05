@@ -1,10 +1,10 @@
-
+version: 2.0
 
 image: Visual Studio 2019
 
 environment:
   matrix:
-    - PHP_VERSION: "8.2.12"
+    - PHP_VERSION: "8.2"
 
 install:
   # Instalar Chocolatey
