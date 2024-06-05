@@ -1,23 +1,24 @@
-version: 2.0
+# Versión de AppVeyor
+version: 2.0.{build}
 
+# Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
 
+# Variables de entorno
 environment:
-  matrix:
-    - PHP_VERSION: "8.2"
+  php_version: '8.1.12'
 
+# Instalación de PHP y Composer
 install:
-  # Instalar Chocolatey
-  - ps: |
-      Set-ExecutionPolicy Bypass -Scope Process -Force; `
-      iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+  - ps: Install-Product php $env:php_version x64
+  - ps: Install-Product composer
 
-  # Instalar PHP usando Chocolatey
-  - choco install php --version $env:PHP_VERSION
+# Instalar dependencias de PHP usando Composer
+before_build:
+  - composer install
 
+# Construcción y pruebas
 build_script:
-  - php -v
-  # Agrega aquí los comandos necesarios para compilar y construir tu proyecto PHP
+  - echo Build started
+  - php -l src # Verifica que los archivos PHP no tienen errores de sintaxis
 
-test_script:
-  # Agrega aquí los comandos necesarios para ejecutar tus pruebas
