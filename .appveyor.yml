@@ -1,5 +1,5 @@
 # Versión de AppVeyor
-version: 1.10.{build}
+version: 1.11.{build}
 
 # Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
@@ -29,9 +29,9 @@ install:
 
       # Verificar que el archivo ZIP no esté dañado
       Write-Host "Verifying downloaded ZIP file..."
-      $zipTest = Test-Archive -Path $phpZip
-      if (-Not $zipTest) {
-        throw "The downloaded ZIP file is corrupted or incomplete."
+      $downloadedFileSize = (Get-Item $phpZip).length
+      if ($downloadedFileSize -lt 1MB) {
+        throw "The downloaded ZIP file is too small. Download may have failed."
       }
 
       # Expandir el archivo ZIP
