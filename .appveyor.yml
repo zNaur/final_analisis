@@ -1,5 +1,5 @@
 # Versión de AppVeyor
-version: 1.7.{build}
+version: 1.8.{build}
 
 # Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
@@ -7,23 +7,39 @@ image: Visual Studio 2019
 # Variables de entorno
 environment:
   PHP_URL: 'https://windows.php.net/downloads/releases/php-8.2.12-Win32-vs16-x64.zip'
+  PHP_DIR: 'C:\\php'
+  PHP_ZIP: 'C:\\php\\php.zip'
 
 # Instalación de PHP y Composer
 install:
   # Descargar y configurar PHP
   - ps: |
       $ErrorActionPreference = 'Stop'
-      $phpPath = "C:\\php"
+      $phpPath = $env:PHP_DIR
+      $phpZip = $env:PHP_ZIP
+
+      # Crear directorio para PHP
       if (-Not (Test-Path $phpPath)) {
         New-Item -ItemType Directory -Path $phpPath
       }
+
+      # Descargar PHP
       $webClient = New-Object System.Net.WebClient
-      $phpZipPath = "$phpPath\\php.zip"
-      $webClient.DownloadFile($env:PHP_URL, $phpZipPath)
-      Expand-Archive -Path $phpZipPath -DestinationPath $phpPath
+      $webClient.DownloadFile($env:PHP_URL, $phpZip)
+
+      # Verificar que el archivo ZIP no esté dañado
+      if (-Not (Test-Path $phpZip)) {
+        throw "PHP ZIP file was not downloaded successfully."
+      }
+
+      # Expandir el archivo ZIP
+      Expand-Archive -Path $phpZip -DestinationPath $phpPath -Force
+
+      # Encontrar la carpeta de PHP y agregarla al PATH
       $phpFolder = Get-ChildItem -Path $phpPath | Where-Object { $_.PsIsContainer } | Select-Object -First 1
-      $env:Path += ";$phpPath\\$phpFolder"
-      Write-Host "PHP installed to $phpPath\\$phpFolder"
+      $env:Path += ";$phpPath\\$phpFolder.Name"
+
+      Write-Host "PHP installed to $phpPath\\$phpFolder.Name"
   
   # Descargar y configurar Composer
   - ps: |
@@ -32,12 +48,13 @@ install:
       $webClient.DownloadFile($composerUrl, $composerSetup)
       php $composerSetup --install-dir=$phpPath --filename=composer
       $env:Path += ";$phpPath"
+
       Write-Host "Composer installed to $phpPath"
 
 # Instalar dependencias de PHP usando Composer
 before_build:
   - ps: |
-      & "$phpPath\\composer" install
+      & "$env:PHP_DIR\\composer" install
 
 # Verificación de sintaxis PHP
 build_script:
