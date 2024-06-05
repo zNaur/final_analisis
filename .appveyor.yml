@@ -1,5 +1,5 @@
 # Versión de AppVeyor
-version: 1.11.{build}
+version: 1.12.{build}
 
 # Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
@@ -38,12 +38,10 @@ install:
       Write-Host "Extracting PHP files..."
       Expand-Archive -Path $phpZip -DestinationPath $phpPath -Force
 
-      # Encontrar la carpeta de PHP y agregarla al PATH
-      $phpFolder = Get-ChildItem -Path $phpPath | Where-Object { $_.PsIsContainer } | Select-Object -First 1
-      $env:Path += ";$phpPath\\$phpFolder.Name"
+  # Agregar la ruta de PHP al entorno PATH
+  - ps: |
+      $env:Path += ";$phpPath"
 
-      Write-Host "PHP installed to $($phpPath)\\$($phpFolder.Name)"
-  
   # Descargar y configurar Composer
   - ps: |
       $composerUrl = 'https://getcomposer.org/installer'
@@ -51,9 +49,6 @@ install:
       Write-Host "Downloading Composer from $composerUrl..."
       Invoke-WebRequest -Uri $composerUrl -OutFile $composerSetup
       php $composerSetup --install-dir=$phpPath --filename=composer
-      $env:Path += ";$phpPath"
-
-      Write-Host "Composer installed to $phpPath"
 
 # Instalar dependencias de PHP usando Composer
 before_build:
