@@ -1,5 +1,5 @@
 # Versión de AppVeyor
-version: 1.8.{build}
+version: 1.9.{build}
 
 # Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
@@ -24,28 +24,32 @@ install:
       }
 
       # Descargar PHP
-      $webClient = New-Object System.Net.WebClient
-      $webClient.DownloadFile($env:PHP_URL, $phpZip)
+      Write-Host "Downloading PHP from $($env:PHP_URL)..."
+      Invoke-WebRequest -Uri $env:PHP_URL -OutFile $phpZip
 
       # Verificar que el archivo ZIP no esté dañado
-      if (-Not (Test-Path $phpZip)) {
-        throw "PHP ZIP file was not downloaded successfully."
+      Write-Host "Verifying downloaded ZIP file..."
+      $zipTest = Test-Archive -Path $phpZip
+      if (-Not $zipTest) {
+        throw "The downloaded ZIP file is corrupted or incomplete."
       }
 
       # Expandir el archivo ZIP
+      Write-Host "Extracting PHP files..."
       Expand-Archive -Path $phpZip -DestinationPath $phpPath -Force
 
       # Encontrar la carpeta de PHP y agregarla al PATH
       $phpFolder = Get-ChildItem -Path $phpPath | Where-Object { $_.PsIsContainer } | Select-Object -First 1
       $env:Path += ";$phpPath\\$phpFolder.Name"
 
-      Write-Host "PHP installed to $phpPath\\$phpFolder.Name"
+      Write-Host "PHP installed to $($phpPath)\\$($phpFolder.Name)"
   
   # Descargar y configurar Composer
   - ps: |
       $composerUrl = 'https://getcomposer.org/installer'
       $composerSetup = "$phpPath\\composer-setup.php"
-      $webClient.DownloadFile($composerUrl, $composerSetup)
+      Write-Host "Downloading Composer from $composerUrl..."
+      Invoke-WebRequest -Uri $composerUrl -OutFile $composerSetup
       php $composerSetup --install-dir=$phpPath --filename=composer
       $env:Path += ";$phpPath"
 
