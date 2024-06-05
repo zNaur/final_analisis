@@ -1,0 +1,18 @@
+version: 1.0
+
+image: Visual Studio 2019
+
+environment:
+  matrix:
+    - PHP_VERSION: "8.2.12"
+
+install:
+  - ps: Install-Product node $env:nodejs_version
+  - ps: Install-Product php $env:PHP_VERSION
+
+build_script:
+  - php -v
+  # Agrega aquí los comandos necesarios para compilar y construir tu proyecto PHP
+
+test_script:
+  # Agrega aquí los comandos necesarios para ejecutar tus pruebas
