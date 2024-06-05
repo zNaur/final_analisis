@@ -1,12 +1,12 @@
 # Versión de AppVeyor
-version: 1.9.{build}
+version: 1.10.{build}
 
 # Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
 
 # Variables de entorno
 environment:
-  PHP_URL: 'https://windows.php.net/downloads/releases/php-8.2.12-Win32-vs16-x64.zip'
+  PHP_URL: 'https://windows.php.net/downloads/releases/php-8.2.20-nts-Win32-vs16-x86.zip'
   PHP_DIR: 'C:\\php'
   PHP_ZIP: 'C:\\php\\php.zip'
 
