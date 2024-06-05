@@ -1,24 +1,33 @@
 # Versión de AppVeyor
-version: 2.0.{build}
+version: 3.0.{build}
 
 # Imagen del entorno de construcción (Windows)
 image: Visual Studio 2019
 
 # Variables de entorno
 environment:
-  php_version: '8.1.12'
+  PHP_URL: 'https://windows.php.net/downloads/releases/php-8.2.12-Win32-vs16-x64.zip'
 
 # Instalación de PHP y Composer
 install:
-  - ps: Install-Product php $env:php_version x64
-  - ps: Install-Product composer
+  # Descargar PHP
+  - ps: |
+      $webClient = New-Object System.Net.WebClient
+      $webClient.DownloadFile($env:PHP_URL, 'php.zip')
+      Expand-Archive php.zip -DestinationPath 'C:\php'
+      $env:Path += ';C:\php\php-8.2.12-Win32-vs16-x64'
+  
+  # Descargar Composer
+  - ps: |
+      $url = 'https://getcomposer.org/installer'
+      $webClient.DownloadString($url) | php -- --install-dir=C:\php --filename=composer
+      $env:Path += ';C:\php'
 
 # Instalar dependencias de PHP usando Composer
 before_build:
   - composer install
 
-# Construcción y pruebas
+# Construcción y verificación de sintaxis
 build_script:
   - echo Build started
   - php -l src # Verifica que los archivos PHP no tienen errores de sintaxis
-
